@@ -3,11 +3,12 @@ from typing import Dict, List
 from ..models.base import AnomalyDetector
 from ..models.statistical.zscore import ZScoreDetector
 from ..models.statistical.iqr import IQRDetector
+from ..models.machine_learning.isolation_forest import IsolationForestDetector
 
 class AnomalyDetectionPipeline:
     def __init__(self, models: List[AnomalyDetector] = None):
         if models is None:
-            self.models = [ZScoreDetector(), IQRDetector()]
+            self.models = [ZScoreDetector(), IQRDetector(), IsolationForestDetector()]
         else:
             self.models = models
 
