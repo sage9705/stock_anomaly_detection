@@ -3,6 +3,7 @@ import pandas as pd
 from typing import Dict, List
 from .base import DataSource
 from ...utils.config import Config
+import time
 
 class AlphaVantageSource(DataSource):
     BASE_URL = "https://www.alphavantage.co/query"
@@ -15,7 +16,15 @@ class AlphaVantageSource(DataSource):
         params['apikey'] = self.api_key
         response = requests.get(self.BASE_URL, params=params)
         response.raise_for_status()
-        return response.json()
+        data = response.json()
+
+        if "Error Message" in data:
+            raise ValueError(f"Alpha Vantage API error: {data['Error Message']}")
+        if "Note" in data:
+            print(f"Alpha Vantage API note: {data['Note']}")
+            time.sleep(60)  
+        
+        return data
 
     def get_daily_data(self, symbol: str) -> pd.DataFrame:
         params = {
@@ -24,6 +33,11 @@ class AlphaVantageSource(DataSource):
             "outputsize": "full"
         }
         data = self._make_request(params)
+        
+        if "Time Series (Daily)" not in data:
+            print(f"Unexpected API response for {symbol}: {data}")
+            return pd.DataFrame()  
+        
         time_series = data['Time Series (Daily)']
         
         df = pd.DataFrame.from_dict(time_series, orient='index')
